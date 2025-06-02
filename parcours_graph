@@ -1,0 +1,87 @@
+-----------------------Parcours en largeur-----------------------
+
+Explication : Le parcours en largeur (BFS) visite les nœuds d’un arbre ou d’un graphe niveau par niveau, en explorant d’abord tous les voisins proches avant de passer aux suivants. 
+              Il utilise une file pour mémoriser les nœuds à visiter dans l’ordre.
+
+Code en C : 
+
+void bfs(Graph* graph, int startVertex) {
+    Queue* q = createQueue();
+    graph->visited[startVertex] = 1;
+    enqueue(q, startVertex);
+    while (!isEmpty(q)) {
+        int currentVertex = dequeue(q);
+        printf("%d ", currentVertex);
+        Node* temp = graph->adjLists[currentVertex];
+        
+        while (temp) {
+            int adjVertex = temp->vertex;
+
+            if (graph->visited[adjVertex] == 0) {
+                graph->visited[adjVertex] = 1;
+                enqueue(q, adjVertex);
+            }
+            temp = temp->next;
+        }
+    }
+    printf("\n");
+}
+
+Code en Ocaml : 
+
+let rec voisins sommet = function
+  | [] -> []
+  | (v, adj)::rest -> if v = sommet then adj else voisins sommet rest
+
+(* BFS *)
+let bfs graphe start =
+  let queue = Queue.create () in
+  let visite = Hashtbl.create 100 in
+
+  Queue.add start queue;
+  Hashtbl.add visite start true;
+
+  while not (Queue.is_empty queue) do
+    let sommet = Queue.take queue in
+    print_int sommet; print_string " ";
+
+    let adj = voisins sommet graphe in
+    List.iter (fun voisin ->
+      if not (Hashtbl.mem visite voisin) then begin
+        Hashtbl.add visite voisin true;
+        Queue.add voisin queue
+      end
+    ) adj
+  done;
+  print_newline ()
+
+  -----------------------Parcours en profondeur-----------------------
+
+Explication : Le DFS explore un graphe en profondeur en visitant un sommet, puis en parcourant récursivement chacun de ses voisins non visités avant de revenir en arrière.
+
+Code en C : 
+
+void dfs(Graph* graph, int vertex) {
+    graph->visited[vertex] = 1;
+    printf("%d ", vertex);
+
+    Node* temp = graph->adjLists[vertex];
+    while (temp != NULL) {
+        int adjVertex = temp->vertex;
+        if (!graph->visited[adjVertex]) {
+            dfs(graph, adjVertex);
+        }
+        temp = temp->next;
+    }
+}
+
+code en Ocaml: 
+
+let rec dfs graphe visite sommet =
+  if not (Hashtbl.mem visite sommet) then begin
+    print_int sommet; print_string " ";
+    Hashtbl.add visite sommet true;
+    let adj = voisins sommet graphe in
+    List.iter (dfs graphe visite) adj
+  end
+
