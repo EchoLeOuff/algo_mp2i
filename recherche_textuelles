@@ -1,0 +1,76 @@
+----------------------------Boyer-Moore----------------------------
+
+Explication : L’algorithme de Boyer-Moore est une méthode efficace de recherche de motif dans un texte. Il compare le motif de droite à gauche, 
+              et utilise deux heuristiques (mauvais caractère et bons suffixes) pour décaler intelligemment le motif sur le texte, sautant ainsi plusieurs positions, 
+              ce qui accélère la recherche.
+
+Code en C : 
+
+void preprocess_bad_char(char *pattern, int m, int badChar[ALPHABET_SIZE]) {
+    for (int i = 0; i < ALPHABET_SIZE; i++)
+        badChar[i] = -1;
+    for (int i = 0; i < m; i++)
+        badChar[(unsigned char)pattern[i]] = i;
+}
+
+void boyer_moore(char *text, char *pattern) {
+    int n = strlen(text);
+    int m = strlen(pattern);
+    int badChar[ALPHABET_SIZE];
+
+    preprocess_bad_char(pattern, m, badChar);
+
+    int s = 0;  // décalage du motif
+    while (s <= n - m) {
+        int j = m - 1;
+        while (j >= 0 && pattern[j] == text[s + j])
+            j--;
+        if (j < 0) {
+            printf("Pattern trouvé à l'indice %d\n", s);
+            s += (s + m < n) ? m - badChar[(unsigned char)text[s + m]] : 1;
+        } else {
+            int shift = j - badChar[(unsigned char)text[s + j]];
+            s += (shift > 1) ? shift : 1;
+        }
+    }
+}
+
+Code en Ocaml : 
+
+let preprocess_bad_char pattern =
+  let bad_char = Array.make alphabet_size (-1) in
+  for i = 0 to String.length pattern - 1 do
+    bad_char.(Char.code pattern.[i]) <- i
+  done;
+  bad_char
+
+let boyer_moore text pattern =
+  let n = String.length text in
+  let m = String.length pattern in
+  let bad_char = preprocess_bad_char pattern in
+  let rec search s =
+    if s <= n - m then
+      let rec match_from j =
+        if j < 0 then (
+          Printf.printf "Pattern trouvé à l'indice %d\n" s;
+          let next_shift =
+            if s + m < n then m - bad_char.(Char.code text.[s + m]) else 1
+          in
+          search (s + next_shift)
+        ) else if pattern.[j] = text.[s + j] then
+          match_from (j - 1)
+        else
+          let shift = j - bad_char.(Char.code text.[s + j]) in
+          search (s + (if shift > 1 then shift else 1))
+      in
+      match_from (m - 1)
+  in
+  search 0
+
+-----------------------------BMHorspool-----------------------------
+
+Explication : Boyer-Moore-Horspool est une simplification de Boyer-Moore qui utilise uniquement l’heuristique du mauvais caractère, appliquée au dernier caractère du motif. Cette simplification rend l’implémentation plus simple et souvent plus rapide en pratique sur certains types de textes.
+
+Code en C : 
+
+Code en Ocaml : 
