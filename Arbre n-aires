@@ -1,0 +1,149 @@
+---------------------------Type arbre---------------------------
+
+en C : 
+
+typedef struct Node {
+    int value;                      // Valeur stockée dans le nœud
+    int num_children;               // Nombre d’enfants
+    struct Node** children;         // Tableau de pointeurs vers les enfants
+} Node;
+
+en Ocaml : 
+
+type ’a arbre_naire =
+  | Vide
+  | Noeud of ’a * ’a arbre_naire list
+
+-----------------------Type arbre binaire-----------------------
+
+Code en C : 
+
+typedef struct Node {
+    int value;                      // Valeur stockée dans le nœud
+    struct Node* left;               // Nombre d’enfants
+    struct Node* right;         // Tableau de pointeurs vers les enfants
+} Node;
+
+Code Ocaml : 
+
+type ’a arbre_bin =
+| Vide
+| N of ’a arbre_bin * ’a * ’a arbre_bin
+
+---------------------Hauteur arbre binaire---------------------
+
+Explication : La hauteur d’un arbre est le nombre de niveaux entre la racine et la feuille la plus profonde.
+              Pour la calculer, on utilise une fonction récursive :
+                Si l’arbre est vide → hauteur = 0
+                Sinon → hauteur = 1 + max(hauteur de gauche, hauteur de droite)
+
+Code en C : 
+
+int tree_height(Node* root) {
+    if (root == NULL)
+        return 0;
+    int left_height = tree_height(root->left);
+    int right_height = tree_height(root->right);
+    return 1 + (left_height > right_height ? left_height : right_height);
+}
+
+Code Ocaml : 
+
+let rec height t =
+  match t with
+  | Empty -> 0
+  | Node (_, left, right) -> 1 + max (height left) (height right)
+
+---------------------Taille arbre binaire---------------------
+
+Explication : La taille d’un arbre binaire est le nombre total de nœuds qu’il contient.
+              Pour calculer cette taille, on utilise une approche récursive :
+                Si l’arbre est vide, la taille est 0.
+                Sinon, la taille est 1 (le nœud courant) plus la taille du sous-arbre gauche plus la taille du sous-arbre droit.
+
+Code en C : 
+
+int tailleArbre(Node* root) {
+    if (root == NULL)
+        return 0;
+    return 1 + tailleArbre(root->left) + tailleArbre(root->right);
+}
+
+Code en Ocaml : 
+
+let rec taille_arbre = function
+  | Empty -> 0
+  | Noeud (_, gauche, droite) -> 1 + taille_arbre gauche + taille_arbre droite
+
+--------------Insertion arbre binairede recherche---------------
+
+Explication : L'insertion dans un arbre binaire de recherche se fait en comparant la valeur à insérer avec le nœud courant : 
+              si elle est plus petite, on descend à gauche, sinon à droite, jusqu'à trouver une place vide où créer un nouveau nœud. 
+              Cette méthode garantit que l'arbre reste trié, facilitant les recherches ultérieures.
+
+Code en C : 
+
+Node* inserer(Node* root, int val) {
+    if (root == NULL) {
+        return newNode(val);
+    }
+    if (val < root->data) {
+        root->left = inserer(root->left, val);
+    } else if (val > root->data) {
+        root->right = inserer(root->right, val);
+    }
+    return root;
+}
+
+Code en Ocaml : 
+
+let rec insert x = function
+  | Vide -> N ( Vide , x , Vide )
+  | N (g , y , d ) when x < y -> N ( insert x g , y , d )
+  | N (g , y , d ) -> N (g , y , insert x d )
+
+-------------------Echange et monter tas-------------------
+
+Explication : echange : cette fonction échange les valeurs de deux éléments dans un tableau, permettant ainsi de permuter deux nœuds du tas.
+              monter (sift-up) : cette fonction remonte un élément dans un tas binaire max-heap tant qu’il est plus grand que son parent, 
+                                  afin de restaurer la propriété de tas après une insertion ou modification
+
+Code en C : 
+
+void echange(int* a, int* b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void monter(int heap[], int i) {
+    while (i > 0) {
+        int parent = (i - 1) / 2;
+        if (heap[i] > heap[parent]) {
+            echange(&heap[i], &heap[parent]);
+            i = parent;
+        } else {
+            break;
+        }
+    }
+}
+
+Code en Ocaml : 
+
+let echange heap i j =
+  let temp = heap.(i) in
+  heap.(i) <- heap.(j);
+  heap.(j) <- temp
+
+let rec monter heap i =
+  if i = 0 then ()
+  else
+    let parent = (i - 1) / 2 in
+    if heap.(i) > heap.(parent) then begin
+      echange heap i parent;
+      monter heap parent
+    end
+
+
+
+
