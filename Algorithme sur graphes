@@ -1,0 +1,307 @@
+-------------------------------Dijkstra-------------------------------
+
+Explication : Cette version sélectionne à chaque étape le sommet non encore traité avec la plus petite distance courante, ce qui donne une complexité en O(V²) (V = nombre de sommets).
+              Elle utilise un tableau pour gérer les distances et un tableau booléen pour savoir quels sommets sont déjà fixés.
+
+Code en C :
+
+#define MAX 100
+#define INF INT_MAX
+
+int minDistance(int dist[], int visited[], int n) {
+    int min = INF, min_index = -1;
+    for (int v = 0; v < n; v++) {
+        if (!visited[v] && dist[v] <= min) {
+            min = dist[v];
+            min_index = v;
+        }
+    }
+    return min_index;
+}
+
+void dijkstra(int graph[MAX][MAX], int n, int src) {
+    int dist[MAX];
+    int visited[MAX] = {0};
+
+    for (int i = 0; i < n; i++) dist[i] = INF;
+    dist[src] = 0;
+
+    for (int count = 0; count < n - 1; count++) {
+        int u = minDistance(dist, visited, n);
+        if (u == -1) break; // tous visités ou sommets inaccessibles
+        visited[u] = 1;
+
+        for (int v = 0; v < n; v++) {
+            if (!visited[v] && graph[u][v] && dist[u] != INF &&
+                dist[u] + graph[u][v] < dist[v]) {
+                dist[v] = dist[u] + graph[u][v];
+            }
+        }
+    }
+
+    printf("Distance minimale depuis %d :\n", src);
+    for (int i = 0; i < n; i++) {
+        if (dist[i] == INF) printf("%d : INF\n", i);
+        else printf("%d : %d\n", i, dist[i]);
+    }
+}
+
+
+Code en Ocaml : 
+
+let inf = max_int
+
+let min_distance dist visited =
+  let min = ref inf in
+  let min_index = ref (-1) in
+  Array.iteri (fun i d ->
+    if not visited.(i) && d <= !min then (
+      min := d;
+      min_index := i
+    )
+  ) dist;
+  !min_index
+
+let dijkstra graph src =
+  let n = Array.length graph in
+  let dist = Array.make n inf in
+  let visited = Array.make n false in
+  dist.(src) <- 0;
+
+  for _ = 0 to n - 2 do
+    let u = min_distance dist visited in
+    if u = -1 then ()
+    else (
+      visited.(u) <- true;
+      for v = 0 to n - 1 do
+        if not visited.(v) && graph.(u).(v) > 0 && dist.(u) <> inf then
+          let alt = dist.(u) + graph.(u).(v) in
+          if alt < dist.(v) then dist.(v) <- alt
+      done
+    )
+  done;
+  Array.iteri (fun i d ->
+    Printf.printf "%d : %s\n" i (if d = inf then "INF" else string_of_int d)
+  ) dist
+
+
+--------------------Dijkstra avec file de priorité--------------------
+
+Explication : L’algorithme de Dijkstra avec file de priorité utilise un tas binaire pour toujours extraire rapidement le sommet avec la plus petite distance connue, 
+              ce qui optimise la mise à jour des distances et améliore significativement la performance par rapport à une recherche linéaire.
+
+Code en C :
+                                 
+#define MAX 100
+#define INF INT_MAX
+
+typedef struct {
+    int vertex;
+    int dist;
+} Node;
+
+typedef struct {
+    Node *nodes;
+    int size;
+    int capacity;
+} MinHeap;
+
+MinHeap* createMinHeap(int capacity) {
+    MinHeap* heap = malloc(sizeof(MinHeap));
+    heap->nodes = malloc(capacity * sizeof(Node));
+    heap->size = 0;
+    heap->capacity = capacity;
+    return heap;
+}
+
+void swap(Node* a, Node* b) {
+    Node temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void minHeapify(MinHeap* heap, int idx) {
+    int smallest = idx;
+    int left = 2 * idx + 1;
+    int right = 2 * idx + 2;
+
+    if (left < heap->size && heap->nodes[left].dist < heap->nodes[smallest].dist)
+        smallest = left;
+    if (right < heap->size && heap->nodes[right].dist < heap->nodes[smallest].dist)
+        smallest = right;
+
+    if (smallest != idx) {
+        swap(&heap->nodes[smallest], &heap->nodes[idx]);
+        minHeapify(heap, smallest);
+    }
+}
+
+int isEmpty(MinHeap* heap) {
+    return heap->size == 0;
+}
+
+Node extractMin(MinHeap* heap) {
+    Node root = heap->nodes[0];
+    heap->nodes[0] = heap->nodes[heap->size - 1];
+    heap->size--;
+    minHeapify(heap, 0);
+    return root;
+}
+
+void decreaseKey(MinHeap* heap, int vertex, int dist) {
+    int i;
+    for (i = 0; i < heap->size; i++) {
+        if (heap->nodes[i].vertex == vertex) break;
+    }
+    heap->nodes[i].dist = dist;
+
+    while (i && heap->nodes[(i - 1) / 2].dist > heap->nodes[i].dist) {
+        swap(&heap->nodes[i], &heap->nodes[(i - 1) / 2]);
+        i = (i - 1) / 2;
+    }
+}
+
+int isInMinHeap(MinHeap* heap, int vertex) {
+    for (int i = 0; i < heap->size; i++)
+        if (heap->nodes[i].vertex == vertex)
+            return 1;
+    return 0;
+}
+
+void dijkstra(int graph[MAX][MAX], int n, int src) {
+    int dist[MAX];
+    MinHeap* heap = createMinHeap(n);
+
+    for (int v = 0; v < n; v++) {
+        dist[v] = INF;
+        heap->nodes[v].vertex = v;
+        heap->nodes[v].dist = INF;
+    }
+    dist[src] = 0;
+    heap->nodes[src].dist = 0;
+    heap->size = n;
+
+    // Construire le tas initial
+    for (int i = (n - 1) / 2; i >= 0; i--) {
+        minHeapify(heap, i);
+    }
+
+    while (!isEmpty(heap)) {
+        Node minNode = extractMin(heap);
+        int u = minNode.vertex;
+
+        for (int v = 0; v < n; v++) {
+            if (graph[u][v] && dist[u] != INF && dist[u] + graph[u][v] < dist[v]) {
+                dist[v] = dist[u] + graph[u][v];
+                if (isInMinHeap(heap, v))
+                    decreaseKey(heap, v, dist[v]);
+            }
+        }
+    }
+
+    printf("Distance minimale depuis %d :\n", src);
+    for (int i = 0; i < n; i++) {
+        if (dist[i] == INF) printf("%d : INF\n", i);
+        else printf("%d : %d\n", i, dist[i]);
+    }
+
+    free(heap->nodes);
+    free(heap);
+}
+
+                              
+Code en Ocaml : 
+
+module MinHeap = struct
+  type t = (int * int) array  (* (distance, vertex) *)
+  let swap arr i j =
+    let tmp = arr.(i) in
+    arr.(i) <- arr.(j);
+    arr.(j) <- tmp
+
+  let heapify_down arr size i =
+    let rec loop i =
+      let left = 2 * i + 1 in
+      let right = 2 * i + 2 in
+      let smallest = ref i in
+      if left < size && fst arr.(left) < fst arr.(!smallest) then smallest := left;
+      if right < size && fst arr.(right) < fst arr.(!smallest) then smallest := right;
+      if !smallest <> i then (
+        swap arr i !smallest;
+        loop !smallest
+      )
+    in loop i
+
+  let heapify_up arr i =
+    let rec loop i =
+      if i > 0 then
+        let parent = (i - 1) / 2 in
+        if fst arr.(i) < fst arr.(parent) then (
+          swap arr i parent;
+          loop parent
+        )
+    in loop i
+
+  type heap = {
+    arr : t;
+    mutable size : int;
+  }
+
+  let create capacity = { arr = Array.make capacity (max_int, -1); size = 0 }
+
+  let insert h (d, v) =
+    h.arr.(h.size) <- (d, v);
+    h.size <- h.size + 1;
+    heapify_up h.arr (h.size - 1)
+
+  let extract_min h =
+    let root = h.arr.(0) in
+    h.arr.(0) <- h.arr.(h.size - 1);
+    h.size <- h.size - 1;
+    heapify_down h.arr h.size 0;
+    root
+
+  let is_empty h = h.size = 0
+
+  let decrease_key h v new_d =
+    let rec find_index i =
+      if i >= h.size then None
+      else if snd h.arr.(i) = v then Some i
+      else find_index (i + 1)
+    in
+    match find_index 0 with
+    | None -> ()
+    | Some i ->
+        if new_d < fst h.arr.(i) then (
+          h.arr.(i) <- (new_d, v);
+          heapify_up h.arr i
+        )
+end
+
+let dijkstra graph src =
+  let n = Array.length graph in
+  let dist = Array.make n max_int in
+  let visited = Array.make n false in
+  dist.(src) <- 0;
+
+  let heap = MinHeap.create n in
+  MinHeap.insert heap (0, src);
+
+  while not (MinHeap.is_empty heap) do
+    let (d, u) = MinHeap.extract_min heap in
+    if not visited.(u) then (
+      visited.(u) <- true;
+      for v = 0 to n - 1 do
+        if graph.(u).(v) > 0 && not visited.(v) then
+          let alt = d + graph.(u).(v) in
+          if alt < dist.(v) then (
+            dist.(v) <- alt;
+            MinHeap.insert heap (alt, v)
+          )
+      done
+    )
+  done;
+
+  Array.iteri (fun i d ->
+    Printf.printf "%d : %s\n" i (if d = max_int then "INF" else string_of_int d)
+  ) dist
