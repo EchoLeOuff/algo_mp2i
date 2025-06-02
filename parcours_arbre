@@ -1,0 +1,68 @@
+-----------------------Parcours préfixe-----------------------
+
+Explication : Parcours d'un arbre en affichant la racine en premier (R-G-D)
+
+en C : 
+
+void Prefixe (root){
+  if (root !== NULL) {
+    printf("%d ", root->value);
+    Prefixe(root->left);
+    Prefixe(root->right);
+  }
+}
+
+en Ocaml : 
+
+let rec parcours_prefixe = 
+  | Empty -> ()
+  | Noeud (v, gauche, droite) ->
+      print_int v; print_string " ";   
+      parcours_prefixe gauche;         
+      parcours_prefixe droite 
+
+-----------------------Parcours infixe-----------------------
+
+Explication : Parcours d'un arbre en affichant le fils gauche en premier (G-R-D)
+
+en C : 
+
+void Prefixe (root){
+  if (root !== NULL) {
+    Prefixe(root->left);
+    printf("%d ", root->value);
+    Prefixe(root->right);
+  }
+}
+
+en Ocaml : 
+
+let rec parcours_prefixe = 
+  | Empty -> ()
+  | Noeud (v, gauche, droite) ->
+      parcours_prefixe gauche;  
+      print_int v; print_string " ";   
+      parcours_prefixe droite 
+
+-----------------------Parcours postfixe-----------------------
+
+Explication : Parcours d'un arbre en affichant le fils gauche en premier (G-D-R)
+
+en C : 
+
+void Prefixe (root){
+  if (root !== NULL) {
+    Prefixe(root->left);
+    Prefixe(root->right);
+    printf("%d ", root->value);
+  }
+}
+
+en Ocaml : 
+
+let rec parcours_prefixe = 
+  | Empty -> ()
+  | Noeud (v, gauche, droite) ->
+      parcours_prefixe gauche;  
+      parcours_prefixe droite 
+      print_int v; print_string " ";   
