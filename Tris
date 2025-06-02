@@ -1,0 +1,353 @@
+#TRI
+
+--------------------------TRI PAR SELECTION--------------------------
+
+Explication : Le tri par sélection cherche à chaque étape le plus petit élément dans la partie non triée du tableau, puis l’échange avec l’élément courant.
+              Il effectue exactement n - 1 échanges, mais beaucoup de comparaisons.
+
+Complexité : O(n²)	
+
+Code en C : 
+
+void selection_sort(int array[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        int min_index = i;
+        for (int j = i + 1; j < n; j++) {
+            if (array[j] < array[min_index]) {
+                min_index = j;
+            }
+        }
+        int temp = array[i];
+        array[i] = array[min_index];
+        array[min_index] = temp;
+    }
+}
+
+Code en Ocaml
+
+let selection_sort arr =
+  let n = Array.length arr in
+  for i = 0 to n - 2 do
+    let min_index = ref i in
+    for j = i + 1 to n - 1 do
+      if arr.(j) < arr.(!min_index) then
+        min_index := j
+    done;
+    let temp = arr.(i) in
+    arr.(i) <- arr.(!min_index);
+    arr.(!min_index) <- temp
+  done
+
+--------------------------TRI PAR INSERTION--------------------------
+
+Explication : Ce tri construit progressivement le tableau trié en insérant chaque nouvel élément à sa place correcte parmi les précédents déjà triés.
+              Très efficace sur les petits tableaux ou ceux déjà presque triés.
+
+Complexité : O(n²)	
+
+Code en C 
+
+void insertion_sort(int array[], int n) {
+    for (int i = 1; i < n; i++) {
+        int current = array[i];
+        int j = i - 1;
+        while (j >= 0 && array[j] > current) {
+            array[j + 1] = array[j];
+            j--;
+        }
+        array[j + 1] = current;
+    }
+}
+
+Code en Ocaml
+
+let insertion_sort arr =
+  let n = Array.length arr in
+  for i = 1 to n - 1 do
+    let current = arr.(i) in
+    let j = ref (i - 1) in
+    while !j >= 0 && arr.(!j) > current do
+      arr.(!j + 1) <- arr.(!j);
+      decr j
+    done;
+    arr.(!j + 1) <- current
+  done
+
+--------------------------TRI A BULLES--------------------------
+
+Explication : Il compare chaque paire d’éléments adjacents et les échange si nécessaire, faisant "remonter" les plus grands vers la fin du tableau à chaque passage.
+              Simple mais peu efficace, surtout pour les grands tableaux.
+
+Complexité : O(n²)	
+
+Code en C 
+
+void bubble_sort(int array[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (array[j] > array[j + 1]) {
+                int temp = array[j];
+                array[j] = array[j + 1];
+                array[j + 1] = temp;
+            }
+        }
+    }
+}
+
+Code en Ocaml
+
+let bubble_sort arr =
+  let n = Array.length arr in
+  for i = 0 to n - 2 do
+    for j = 0 to n - i - 2 do
+      if arr.(j) > arr.(j + 1) then
+        let temp = arr.(j) in
+        arr.(j) <- arr.(j + 1);
+        arr.(j + 1) <- temp
+    done
+  done
+
+--------------------------TRI FUSION--------------------------
+
+Explication : C’est un algorithme de type diviser pour régner : il découpe récursivement le tableau en deux, trie chaque moitié, puis fusionne les deux moitiés triées.
+              Très rapide et stable, avec une complexité en temps de O(n log n), mais nécessite de la mémoire supplémentaire.
+
+Complexité : O(nlog(n))	
+
+Code en C
+
+void merge(int array[], int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    int *L = malloc(n1 * sizeof(int));
+    int *R = malloc(n2 * sizeof(int));
+
+    for (int i = 0; i < n1; i++) L[i] = array[left + i];
+    for (int j = 0; j < n2; j++) R[j] = array[mid + 1 + j];
+
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            array[k++] = L[i++];
+        } else {
+            array[k++] = R[j++];
+        }
+    }
+
+    while (i < n1) array[k++] = L[i++];
+    while (j < n2) array[k++] = R[j++];
+
+    free(L);
+    free(R);
+}
+
+void merge_sort(int array[], int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        merge_sort(array, left, mid);
+        merge_sort(array, mid + 1, right);
+        merge(array, left, mid, right);
+    }
+}
+
+Code en Ocaml
+
+let rec merge left right =
+  match left, right with
+  | [], r -> r
+  | l, [] -> l
+  | h1::t1, h2::t2 ->
+      if h1 <= h2 then h1 :: merge t1 right
+      else h2 :: merge left t2
+
+let rec merge_sort lst =
+  let n = List.length lst in
+  if n <= 1 then lst
+  else
+    let mid = n / 2 in
+    let left = merge_sort (List.take mid lst) in
+    let right = merge_sort (List.drop mid lst) in
+    merge left right
+
+(* Fonctions auxiliaires si List.take et List.drop ne sont pas disponibles *)
+let rec take n l =
+  if n <= 0 then [] else
+    match l with
+    | [] -> []
+    | x::xs -> x :: take (n - 1) xs
+
+let rec drop n l =
+  if n <= 0 then l else
+    match l with
+    | [] -> []
+    | _::xs -> drop (n - 1) xs
+
+(* Remplacer List.take et List.drop si nécessaire *)
+let merge_sort_safe lst =
+  let rec merge left right =
+    match left, right with
+    | [], r -> r
+    | l, [] -> l
+    | h1::t1, h2::t2 ->
+        if h1 <= h2 then h1 :: merge t1 right
+        else h2 :: merge left t2
+  in
+  let rec sort l =
+    let n = List.length l in
+    if n <= 1 then l
+    else
+      let mid = n / 2 in
+      let left = take mid l in
+      let right = drop mid l in
+      merge (sort left) (sort right)
+  in
+  sort lst
+
+-------------------TRI A PIVOT ALEATOIRE----------------------
+
+Explication : Le tri rapide choisit un élément appelé pivot, puis réorganise le tableau en plaçant les éléments plus petits à gauche et les plus grands à droite.
+              Il est très rapide dans la pratique (complexité moyenne O(n log n)) et fonctionne en place, mais il n’est pas stable et peut atteindre O(n²) dans le pire des cas sans choix aléatoire ou stratégie de pivot efficace.
+
+Complexité : O(n²)	
+
+Code en C
+
+int random_pivot(int low, int high) {
+    return low + rand() % (high - low + 1);
+}
+
+int partition(int arr[], int low, int high) {
+    int pivotIndex = random_pivot(low, high);
+    int pivot = arr[pivotIndex];
+    arr[pivotIndex] = arr[high];
+    arr[high] = pivot;
+
+    int i = low - 1;
+    for (int j = low; j < high; j++) {
+        if (arr[j] <= pivot) {
+            i++;
+            int temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+    }
+
+    arr[high] = arr[i + 1];
+    arr[i + 1] = pivot;
+    return i + 1;
+}
+
+void quickSort(int arr[], int low, int high) {
+    if (low < high) {
+        int pivotIndex = partition(arr, low, high);
+        quickSort(arr, low, pivotIndex - 1);
+        quickSort(arr, pivotIndex + 1, high);
+    }
+}
+
+Code en Ocaml
+
+(* Initialisation du générateur aléatoire *)
+let () = Random.self_init ()
+
+(* Fonction de partition *)
+let rec quick_sort lst =
+  match lst with
+  | [] | [_] -> lst  (* Liste vide ou à un seul élément *)
+  | _ ->
+    let n = List.length lst in
+    let pivot_index = Random.int n in
+    let pivot = List.nth lst pivot_index in
+    let rest = List.filteri (fun i _ -> i <> pivot_index) lst in
+    let left = List.filter (fun x -> x <= pivot) rest in
+    let right = List.filter (fun x -> x > pivot) rest in
+    quick_sort left @ [pivot] @ quick_sort right
+
+-------------------TRI PAR TAS----------------------
+
+Explication : Le tri par tas transforme d'abord le tableau en un tas binaire max (heap), où chaque parent est plus grand que ses enfants.
+              Ensuite, on échange la racine (le plus grand élément) avec le dernier élément du tas, puis on restaure la structure de tas sur la partie restante.
+
+Complexité : O(nlog(n))
+
+Code en C 
+
+void heapify(int arr[], int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && arr[left] > arr[largest])
+        largest = left;
+
+    if (right < n && arr[right] > arr[largest])
+        largest = right;
+
+    if (largest != i) {
+        int temp = arr[i];
+        arr[i] = arr[largest];
+        arr[largest] = temp;
+
+        heapify(arr, n, largest);
+    }
+}
+
+void heapSort(int arr[], int n) {
+    // Construction du tas max
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(arr, n, i);
+    }
+
+    // Extraction des éléments un à un
+    for (int i = n - 1; i > 0; i--) {
+        int temp = arr[0];
+        arr[0] = arr[i];
+        arr[i] = temp;
+
+        heapify(arr, i, 0);
+    }
+}
+
+Code en Ocaml 
+
+(* Échange deux éléments dans un tableau *)
+let swap arr i j =
+  let temp = arr.(i) in
+  arr.(i) <- arr.(j);
+  arr.(j) <- temp
+
+(* Maintient la propriété de tas max à partir de l’index i *)
+let rec heapify arr n i =
+  let largest = ref i in
+  let left = 2 * i + 1 in
+  let right = 2 * i + 2 in
+
+  if left < n && arr.(left) > arr.(!largest) then
+    largest := left;
+
+  if right < n && arr.(right) > arr.(!largest) then
+    largest := right;
+
+  if !largest <> i then (
+    swap arr i !largest;
+    heapify arr n !largest
+  )
+
+(* Tri par tas complet *)
+let heap_sort arr =
+  let n = Array.length arr in
+
+  (* Construction du tas *)
+  for i = (n / 2) - 1 downto 0 do
+    heapify arr n i
+  done;
+
+  (* Extraction des éléments du tas *)
+  for i = n - 1 downto 1 do
+    swap arr 0 i;
+    heapify arr i 0
+  done
+
+
+
