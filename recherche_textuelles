@@ -69,8 +69,65 @@ let boyer_moore text pattern =
 
 -----------------------------BMHorspool-----------------------------
 
-Explication : Boyer-Moore-Horspool est une simplification de Boyer-Moore qui utilise uniquement l’heuristique du mauvais caractère, appliquée au dernier caractère du motif. Cette simplification rend l’implémentation plus simple et souvent plus rapide en pratique sur certains types de textes.
-
+Explication : Boyer-Moore-Horspool créer une table de décalage par rapport au motif et les lettres qui le compose 
 Code en C : 
 
+void preprocessBadChar(char *pattern, int m, int badChar[MAX]) {
+    for (int i = 0; i < MAX; i++) {
+        badChar[i] = m; // Initialiser à la longueur du motif
+    }
+    for (int i = 0; i < m - 1; i++) {
+        badChar[(unsigned char)pattern[i]] = m - 1 - i; // Distance au dernier caractère
+    }
+}
+
+int bmHorspool(char *text, char *pattern) {
+    int n = strlen(text);
+    int m = strlen(pattern);
+    if (m == 0 || n < m) return -1;
+
+    int badChar[MAX];
+    preprocessBadChar(pattern, m, badChar);
+
+    int s = 0; // Décalage courant
+    while (s <= n - m) {
+        int j = m - 1;
+        while (j >= 0 && pattern[j] == text[s + j]) {
+            j--;
+        }
+        if (j < 0) {
+            return s; // Motif trouvé
+        }
+        s += badChar[(unsigned char)text[s + m - 1]]; // Décalage basé sur le caractère non apparié
+    }
+    return -1; // Motif non trouvé
+}
+
 Code en Ocaml : 
+
+let max = 256
+
+let preprocess_bad_char pattern m =
+  let bad_char = Array.make max m in
+  for i = 0 to m - 2 do
+    bad_char.(int_of_char pattern.[i]) <- m - 1 - i
+  done;
+  bad_char
+
+let bm_horspool text pattern =
+  let n = String.length text in
+  let m = String.length pattern in
+  if m = 0 || n < m then -1
+  else
+    let bad_char = preprocess_bad_char pattern m in
+    let rec search s =
+      if s > n - m then -1
+      else
+        let rec compare j =
+          if j < 0 then s
+          else if pattern.[j] = text.[s + j] then compare (j - 1)
+          else search (s + bad_char.(int_of_char text.[s + m - 1]))
+        in
+        compare (m - 1)
+    in
+    search 0
