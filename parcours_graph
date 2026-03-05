@@ -59,6 +59,46 @@ let bfs graphe start =
 
 Explication : Le DFS explore un graphe en profondeur en visitant un sommet, puis en parcourant récursivement chacun de ses voisins non visités avant de revenir en arrière.
 
+pseudo-code : 
+
+PROC DFS_iteratif(G, s, visite, composante)
+    PILE stack
+    empiler(stack, s)
+    visite[s] ← vrai
+
+    TANT QUE stack n’est pas vide FAIRE
+        u ← dépiler(stack)
+        ajouter u à composante
+
+        POUR CHAQUE v DANS Adj[u] FAIRE
+            SI NON visite[v] ALORS
+                visite[v] ← vrai
+                empiler(stack, v)
+            FIN SI
+        FIN POUR
+    FIN TANT QUE
+FIN PROC
+
+PROC composantes_connexes(G)
+    // G = (V, E), Adj est la liste d'adjacence
+    POUR CHAQUE sommet u DANS V FAIRE
+        visite[u] ← faux
+    FIN POUR
+
+    LISTE liste_composantes ← ∅
+
+    POUR CHAQUE sommet u DANS V FAIRE
+        SI NON visite[u] ALORS
+            LISTE composante ← ∅
+            DFS_iteratif(G, u, visite, composante)
+            ajouter composante à liste_composantes
+        FIN SI
+    FIN POUR
+
+    RETOURNER liste_composantes
+FIN PROC
+
+
 Code en C : 
 
 void dfs(Graph* graph, int vertex) {
